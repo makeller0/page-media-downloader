@@ -166,4 +166,13 @@ test('the background submits the whole batch before any individual download fini
   pending.get(second).reject(new Error('Download cancelled'));
   pending.get(third).resolve(2);
   assert.deepEqual(await response, { started: 2, failed: 1 });
+  const stream = await new Promise(resolve => {
+    assert.equal(receiveMessage({ action: 'download-drag', url: baseURI + 'stream.m3u8', type: 'video' }, {}, resolve), true);
+  });
+  assert.equal(stream.error, '这个视频是流式视频，不能直接下载。');
+  const single = new Promise(resolve => {
+    assert.equal(receiveMessage({ action: 'download-drag', url: baseURI + 'sticker.gif', type: 'image' }, {}, resolve), true);
+  });
+  pending.get(baseURI + 'sticker.gif').resolve(3);
+  assert.deepEqual(await single, { error: '' });
 });

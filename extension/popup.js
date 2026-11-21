@@ -10,6 +10,7 @@ const rescan = document.querySelector('#rescan');
 const selectAll = document.querySelector('#select-all');
 const count = document.querySelector('#count');
 const download = document.querySelector('#download');
+const dragToDownload = document.querySelector('#drag-to-download');
 
 const selected = new Set();
 let items = [];
@@ -21,6 +22,29 @@ function setFeedback(text) {
   feedback.textContent = text;
   feedback.hidden = !text;
 }
+
+async function loadDragSetting() {
+  try {
+    const settings = await chrome.storage.local.get({ dragToDownload: true });
+    dragToDownload.checked = settings.dragToDownload;
+    dragToDownload.disabled = false;
+  } catch {
+    setFeedback('无法读取拖动下载设置，请关闭弹窗后再试。');
+  }
+}
+
+dragToDownload.addEventListener('change', async () => {
+  const checked = dragToDownload.checked;
+  dragToDownload.disabled = true;
+  try {
+    await chrome.storage.local.set({ dragToDownload: checked });
+  } catch {
+    dragToDownload.checked = !checked;
+    setFeedback('无法保存拖动下载设置，请稍后再试。');
+  } finally {
+    dragToDownload.disabled = false;
+  }
+});
 
 function updateSelection() {
   const checked = visible.filter(item => selected.has(item)).length;
@@ -148,3 +172,4 @@ download.addEventListener('click', async () => {
 });
 
 scan();
+loadDragSetting();
