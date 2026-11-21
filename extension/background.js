@@ -6,6 +6,10 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.action === 'download-drag' && ['image', 'video'].includes(message.type)) {
+    startDownload(message.url, message.type, message.mimeType).then(error => sendResponse({ error }));
+    return true;
+  }
   if (message?.action !== 'download-batch' || !Array.isArray(message.items)) return;
 
   const requests = message.items.map(async ({ url, type }) => downloadMedia(url, type));
@@ -15,6 +19,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   });
   return true;
 });
+
+async function startDownload(url, type, mimeType) {
+  if (!canDownload(url, type, mimeType)) {
+    return type === 'video' ? videoUnavailable : '这张图片不能直接下载。';
+  }
+  try {
+    await downloadMedia(url, type, mimeType);
+    return '';
+  } catch {
+    return '未能开始下载，请稍后再试。';
+  }
+}
 
 async function showError(tabId, title) {
   if (tabId === undefined) return;
@@ -28,13 +44,6 @@ async function showError(tabId, title) {
 
 chrome.contextMenus.onClicked.addListener(async ({ menuItemId, srcUrl }, tab) => {
   if (menuItemId !== 'image' && menuItemId !== 'video') return;
-  if (!canDownload(srcUrl, menuItemId)) {
-    await showError(tab?.id, menuItemId === 'video' ? videoUnavailable : '这张图片不能直接下载。');
-    return;
-  }
-  try {
-    await downloadMedia(srcUrl, menuItemId);
-  } catch {
-    await showError(tab?.id, '未能开始下载，请稍后再试。');
-  }
+  const error = await startDownload(srcUrl, menuItemId);
+  if (error) await showError(tab?.id, error);
 });

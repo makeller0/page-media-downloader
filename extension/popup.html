@@ -11,7 +11,7 @@
     <img src="icons/48.png" width="36" height="36" alt="">
     <div>
       <h1>网页图片和视频下载</h1>
-      <p>找到喜欢的图片或视频，勾选后保存。</p>
+      <p>勾选喜欢的图片、视频或动图，保存到电脑。</p>
     </div>
     <button id="rescan" type="button">重新扫描</button>
   </header>
@@ -22,6 +22,7 @@
           <option value="all">全部</option>
           <option value="image">图片</option>
           <option value="video">视频</option>
+          <option value="animated">动图/表情包</option>
         </select>
       </label>
       <label>最小尺寸
@@ -33,9 +34,14 @@
         </select>
       </label>
     </div>
+    <details class="settings">
+      <summary>设置</summary>
+      <label><input id="drag-to-download" type="checkbox" disabled> 拖动下载</label>
+      <p>按住图片或视频往下拖一小段，再松开即可下载。</p>
+    </details>
     <p id="notice" class="notice" hidden>发现不能直接下载的流式视频。这些视频不会出现在列表里。</p>
     <p id="feedback" class="notice" role="status" hidden></p>
-    <p id="result" role="status">正在查找网页里的图片和视频……</p>
+    <p id="result" role="status">正在查找网页里的图片、视频和动图……</p>
     <div id="grid"></div>
   </main>
   <footer>

@@ -10,6 +10,7 @@ const rescan = document.querySelector('#rescan');
 const selectAll = document.querySelector('#select-all');
 const count = document.querySelector('#count');
 const download = document.querySelector('#download');
+const dragToDownload = document.querySelector('#drag-to-download');
 
 const selected = new Set();
 let items = [];
@@ -21,6 +22,29 @@ function setFeedback(text) {
   feedback.textContent = text;
   feedback.hidden = !text;
 }
+
+async function loadDragSetting() {
+  try {
+    const settings = await chrome.storage.local.get({ dragToDownload: true });
+    dragToDownload.checked = settings.dragToDownload;
+    dragToDownload.disabled = false;
+  } catch {
+    setFeedback('无法读取拖动下载设置，请关闭弹窗后再试。');
+  }
+}
+
+dragToDownload.addEventListener('change', async () => {
+  const checked = dragToDownload.checked;
+  dragToDownload.disabled = true;
+  try {
+    await chrome.storage.local.set({ dragToDownload: checked });
+  } catch {
+    dragToDownload.checked = !checked;
+    setFeedback('无法保存拖动下载设置，请稍后再试。');
+  } finally {
+    dragToDownload.disabled = false;
+  }
+});
 
 function updateSelection() {
   const checked = visible.filter(item => selected.has(item)).length;
@@ -37,7 +61,9 @@ function updateSelection() {
 function makeCard(item) {
   const label = document.createElement('label');
   label.className = 'card';
-  const name = item.type === 'video' ? '视频' : '图片';
+  const name = item.category === 'animated' ? '动图'
+    : item.category === 'sticker' ? '表情包'
+    : item.type === 'video' ? '视频' : '图片';
   const preview = document.createElement('span');
   preview.className = 'preview';
   const placeholder = document.createElement('span');
@@ -71,7 +97,7 @@ function makeCard(item) {
 function render() {
   const min = Number(size.value);
   visible = items.filter(item =>
-    (type.value === 'all' || item.type === type.value)
+    (type.value === 'all' || item.type === type.value || (type.value === 'animated' && item.category))
     && Math.min(item.width, item.height) >= min
   );
   const cards = document.createDocumentFragment();
@@ -81,7 +107,7 @@ function render() {
   if (!scanning) {
     result.textContent = visible.length ? `找到 ${visible.length} 项可下载的内容`
       : items.length ? '没有符合筛选条件的内容。'
-      : '没找到可下载的图片或视频。可以先在网页上往下滚动，再重新扫描。';
+      : '没找到可下载的图片、视频或动图。可以先在网页上往下滚动，再重新扫描。';
   }
 }
 
@@ -92,7 +118,7 @@ async function scan() {
   selected.clear();
   notice.hidden = true;
   setFeedback('');
-  result.textContent = '正在查找网页里的图片和视频……';
+  result.textContent = '正在查找网页里的图片、视频和动图……';
   render();
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -146,3 +172,4 @@ download.addEventListener('click', async () => {
 });
 
 scan();
+loadDragSetting();
