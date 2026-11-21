@@ -34,8 +34,11 @@
     }
     const elements = path.filter(node => node instanceof Element).slice(0, 5);
     for (const target of elements) {
+      const elementStyle = getComputedStyle(target);
+      if (elementStyle.display === 'none') continue;
       for (const pseudo of [null, '::after', '::before']) {
-        const style = getComputedStyle(target, pseudo);
+        const style = pseudo ? getComputedStyle(target, pseudo) : elementStyle;
+        if (style.display === 'none' || style.visibility === 'hidden') continue;
         if (pseudo && (!style.content || style.content === 'none' || style.content === 'normal')) continue;
         const media = backgroundMedia(style.backgroundImage, target.baseURI);
         if (media) return media;

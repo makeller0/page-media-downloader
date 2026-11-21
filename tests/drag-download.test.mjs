@@ -143,3 +143,23 @@ test('drags find backgrounds on ancestors and visible pseudo-elements', async ()
     url, 'https://example.test/after.gif', 'https://example.test/before.gif'
   ]);
 });
+
+test('hidden or ungenerated backgrounds do not override a visible ancestor background', async () => {
+  const { fire, messages, target, element } = await contentScript();
+  const hiddenBackground = { backgroundImage: 'url("hidden.gif")' };
+  for (const styles of [
+    {
+      normal: { ...hiddenBackground, display: 'none' },
+      '::before': { ...hiddenBackground, display: 'block', content: '""' }
+    },
+    { normal: { ...hiddenBackground, visibility: 'hidden' } },
+    { '::before': { ...hiddenBackground, display: 'none', content: '""' } },
+    { '::after': { ...hiddenBackground, visibility: 'hidden', content: '""' } },
+    { '::before': { ...hiddenBackground, content: 'normal' } }
+  ]) {
+    fire('pointerdown', { composedPath: () => [element(styles), target] });
+    fire('pointermove', { clientY: 120 });
+    fire('pointerup', { clientY: 120 });
+  }
+  assert.deepEqual(messages.map(message => message.url), Array(5).fill(url));
+});
