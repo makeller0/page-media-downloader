@@ -78,6 +78,7 @@ test('finds sticker images and animations in the DOM, CSS and open shadow roots'
   });
   const images = [
     img('motion.webp', 180, 126), img('still.webp', 180, 126), img('cdn-asset', 80, 80),
+    img('%E8%A1%A8%E6%83%85/x.png', 64, 64), img('emoji/%FF.png', 64, 64),
     img('tracking-pixel.gif', 1, 1), img('ui-icon.png', 16, 16)
   ];
   const animationWebp = Buffer.from('524946460000000057454250565038580a00000002000000', 'hex');
@@ -100,6 +101,8 @@ test('finds sticker images and animations in the DOM, CSS and open shadow roots'
     ['motion.webp', 'image', 'animated'],
     ['still.webp', 'image', undefined],
     ['cdn-asset', 'image', 'animated'],
+    ['%E8%A1%A8%E6%83%85/x.png', 'image', 'sticker'],
+    ['emoji/%FF.png', 'image', 'sticker'],
     ['loop.mp4', 'video', 'animated']
   ]);
 });

@@ -12,7 +12,15 @@ export async function scanPage() {
     const mime = url.protocol === 'data:' ? url.href.match(/^data:([^;,]+)/i)?.[1] : '';
     if (/^image\/(?:gif|apng)$/i.test(mime || '') ||
         (url.protocol !== 'data:' && /\.(?:gif|apng)$/i.test(url.pathname))) return 'animated';
-    if (url.protocol !== 'data:' && stickerName.test(url.pathname)) return 'sticker';
+    if (url.protocol !== 'data:') {
+      let path = url.pathname;
+      try {
+        path = decodeURIComponent(path);
+      } catch {
+        // Keep the original path if it contains malformed escapes.
+      }
+      if (stickerName.test(path)) return 'sticker';
+    }
     return '';
   }
 
