@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网页图片和视频下载</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/48.png" width="36" height="36" alt="">
+    <div>
+      <h1>网页图片和视频下载</h1>
+      <p>找到喜欢的图片或视频，勾选后保存。</p>
+    </div>
+    <button id="rescan" type="button">重新扫描</button>
+  </header>
+  <main>
+    <div class="filters">
+      <label>类型
+        <select id="type">
+          <option value="all">全部</option>
+          <option value="image">图片</option>
+          <option value="video">视频</option>
+        </select>
+      </label>
+      <label>最小尺寸
+        <select id="size">
+          <option value="0">不限</option>
+          <option value="128">宽高至少 128 像素</option>
+          <option value="320">宽高至少 320 像素</option>
+          <option value="640">宽高至少 640 像素</option>
+        </select>
+      </label>
+    </div>
+    <p id="notice" class="notice" hidden>发现不能直接下载的流式视频。这些视频不会出现在列表里。</p>
+    <p id="feedback" class="notice" role="status" hidden></p>
+    <p id="result" role="status">正在查找网页里的图片和视频……</p>
+    <div id="grid"></div>
+  </main>
+  <footer>
+    <label><input id="select-all" type="checkbox" disabled> 全选</label>
+    <span id="count">已选 0 项</span>
+    <button id="download" type="button" disabled>下载所选</button>
+  </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

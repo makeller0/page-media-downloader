@@ -1,0 +1,37 @@
+:root {
+  color-scheme: light;
+  font: 14px/1.5 system-ui, "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #182a25;
+  background: #f4f7f5;
+  accent-color: #12644d;
+}
+
+body { width: 420px; margin: 0; }
+header, footer { display: flex; align-items: center; gap: 10px; background: #fff; padding: 14px 16px; }
+header { border-bottom: 1px solid #d8e5dd; }
+header img { border-radius: 9px; flex-shrink: 0; }
+h1 { margin: 0; font-size: 17px; }
+p { margin: 0; }
+header p, #result, #count { color: #52635b; font-size: 12px; }
+#rescan, #download { margin-left: auto; flex-shrink: 0; }
+button, select { font: inherit; padding: 5px 8px; border: 1px solid #b9cfc2; border-radius: 7px; background: white; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .55; }
+#rescan:hover:not(:disabled) { background: #e4f0e9; }
+main { padding: 12px 16px; }
+.filters { display: flex; gap: 14px; }
+.filters label { display: flex; align-items: center; gap: 6px; }
+.notice { margin-top: 10px; padding: 7px 9px; background: #fff1d4; border-radius: 6px; color: #624820; }
+#result { margin: 10px 0 7px; }
+#grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: 320px; overflow: auto; }
+.card { display: block; border: 1px solid #d8e5dd; border-radius: 9px; overflow: hidden; background: white; cursor: pointer; }
+.card:has(:checked) { border-color: #12644d; }
+.preview { display: grid; place-items: center; height: 72px; overflow: hidden; background: #e5eee8; color: #52635b; font-size: 12px; }
+.preview > * { grid-area: 1 / 1; }
+.preview img { width: 100%; height: 72px; object-fit: cover; opacity: 0; }
+.preview img.ready { opacity: 1; }
+.info { display: flex; align-items: center; gap: 4px; padding: 5px; font-size: 11px; }
+input[type="checkbox"] { margin: 0; width: 15px; height: 15px; vertical-align: middle; flex-shrink: 0; }
+footer { border-top: 1px solid #d8e5dd; }
+#download { background: #12644d; border-color: #12644d; color: white; }
+#download:hover:not(:disabled) { background: #0b513d; }
