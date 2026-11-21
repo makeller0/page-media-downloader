@@ -117,6 +117,11 @@ test('only submits downloadable media URLs, keeping existing downloads safe from
     assert.equal(canDownload(url, 'video'), false);
     assert.throws(() => downloadMedia(url, 'video'));
   }
+  for (const mimeType of ['application/x-mpegURL', 'application/vnd.apple.mpegurl', 'application/dash+xml; charset=utf-8']) {
+    assert.equal(canDownload(baseURI + 'live', 'video', mimeType), false);
+    assert.throws(() => downloadMedia(baseURI + 'live', 'video', mimeType));
+  }
+  assert.equal(canDownload(baseURI + 'clip', 'video', 'video/mp4'), true);
   const url = baseURI + 'clip.mp4?token=demo';
   assert.equal(await downloadMedia(url, 'video'), 123);
   assert.deepEqual(calls, [{ url, conflictAction: 'uniquify' }]);
@@ -170,6 +175,13 @@ test('the background submits the whole batch before any individual download fini
     assert.equal(receiveMessage({ action: 'download-drag', url: baseURI + 'stream.m3u8', type: 'video' }, {}, resolve), true);
   });
   assert.equal(stream.error, '这个视频是流式视频，不能直接下载。');
+  const typedStream = await new Promise(resolve => {
+    assert.equal(receiveMessage({
+      action: 'download-drag', url: baseURI + 'live', type: 'video', mimeType: 'application/dash+xml'
+    }, {}, resolve), true);
+  });
+  assert.deepEqual(typedStream, stream);
+  assert.equal(pending.has(baseURI + 'live'), false);
   const single = new Promise(resolve => {
     assert.equal(receiveMessage({ action: 'download-drag', url: baseURI + 'sticker.gif', type: 'image' }, {}, resolve), true);
   });

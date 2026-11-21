@@ -12,10 +12,11 @@ const imageExtensions = new Map([
   ['x-icon', 'ico']
 ]);
 
-export function canDownload(raw, type) {
+export function canDownload(raw, type, mimeType) {
   try {
     const url = new URL(raw);
-    if (type === 'video' && /\.(?:m3u8?|mpd)$/i.test(url.pathname)) return false;
+    if (type === 'video' && (/\.(?:m3u8?|mpd)$/i.test(url.pathname) ||
+      /^\s*application\/(?:x-mpegurl|vnd\.apple\.mpegurl|dash\+xml)\s*(?:;|$)/i.test(mimeType))) return false;
     return ['https:', 'http:'].includes(url.protocol)
       || (type === 'image' && /^data:image\//i.test(url.href));
   } catch {
@@ -23,8 +24,8 @@ export function canDownload(raw, type) {
   }
 }
 
-export function downloadMedia(url, type) {
-  if (!canDownload(url, type)) throw new Error('无法直接下载这个文件。');
+export function downloadMedia(url, type, mimeType) {
+  if (!canDownload(url, type, mimeType)) throw new Error('无法直接下载这个文件。');
   const options = { url, conflictAction: 'uniquify' };
   const inlineFormat = url.match(/^data:image\/([^;,]+)/i)?.[1].toLowerCase();
   const extension = imageExtensions.get(inlineFormat);

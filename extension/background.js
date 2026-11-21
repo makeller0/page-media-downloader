@@ -7,7 +7,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.action === 'download-drag' && ['image', 'video'].includes(message.type)) {
-    startDownload(message.url, message.type).then(error => sendResponse({ error }));
+    startDownload(message.url, message.type, message.mimeType).then(error => sendResponse({ error }));
     return true;
   }
   if (message?.action !== 'download-batch' || !Array.isArray(message.items)) return;
@@ -20,12 +20,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return true;
 });
 
-async function startDownload(url, type) {
-  if (!canDownload(url, type)) {
+async function startDownload(url, type, mimeType) {
+  if (!canDownload(url, type, mimeType)) {
     return type === 'video' ? videoUnavailable : '这张图片不能直接下载。';
   }
   try {
-    await downloadMedia(url, type);
+    await downloadMedia(url, type, mimeType);
     return '';
   } catch {
     return '未能开始下载，请稍后再试。';

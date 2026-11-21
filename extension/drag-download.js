@@ -24,8 +24,11 @@
     if (video) {
       const bounds = video.getBoundingClientRect();
       if (video.controls && event.clientY >= bounds.bottom - Math.min(48, bounds.height * .35)) return;
-      if (video.currentSrc || video.src || video.srcObject) {
-        return { url: video.currentSrc || video.src || '', type: 'video' };
+      const url = video.currentSrc || video.src;
+      const sources = [...video.children].filter(child => child.localName === 'source' && child.src);
+      const source = url ? sources.find(child => child.src === url) : video.srcObject ? undefined : sources[0];
+      if (url || source || video.srcObject) {
+        return { url: url || source?.src || '', type: 'video', mimeType: source?.type };
       }
       return;
     }
@@ -66,9 +69,11 @@
     toastTimer = setTimeout(() => host.remove(), 3000);
   }
 
-  async function download(url, type) {
+  async function download({ url, type, mimeType }) {
     try {
-      const { error } = await chrome.runtime.sendMessage({ action: 'download-drag', url, type });
+      const message = { action: 'download-drag', url, type };
+      if (mimeType) message.mimeType = mimeType;
+      const { error } = await chrome.runtime.sendMessage(message);
       showToast(error || '已开始下载');
     } catch {
       showToast('未能开始下载，请稍后再试。');
@@ -81,7 +86,7 @@
     if (!enabled || (start.background && document.getSelection()?.isCollapsed === false)) return;
     const down = event.clientY - start.y;
     const sideways = Math.abs(event.clientX - start.x);
-    if (down >= 60 && down >= sideways * 1.5) download(start.url, start.type);
+    if (down >= 60 && down >= sideways * 1.5) download(start);
   }
 
   window.addEventListener('pointerdown', event => {

@@ -8,6 +8,7 @@ const url = 'https://example.test/sticker.gif';
 const sticker = { localName: 'img', currentSrc: url };
 const clip = {
   localName: 'video', currentSrc: 'https://example.test/clip.mp4', controls: true,
+  children: [],
   getBoundingClientRect: () => ({ bottom: 180, height: 180 })
 };
 
@@ -90,6 +91,23 @@ test('video pointer drags work without intercepting clicks or seeks; synthetic e
   fire('pointermove', { clientY: 120 });
   fire('pointerup', { clientY: 120 });
   assert.deepEqual(messages, [{ action: 'download-drag', url: clip.currentSrc, type: 'video' }]);
+});
+
+test('video gestures send the MIME type of the selected or only source', async () => {
+  const { fire, messages } = await contentScript();
+  const stream = { localName: 'source', src: 'https://example.test/live', type: 'application/x-mpegURL' };
+  const direct = { localName: 'source', src: clip.currentSrc, type: 'video/mp4' };
+  for (const video of [
+    { ...clip, children: [stream, direct] },
+    { ...clip, currentSrc: '', children: [stream] }
+  ]) {
+    fire('pointerdown', { composedPath: () => [video] });
+    fire('pointermove', { clientY: 120 });
+    fire('pointerup', { clientY: 120 });
+  }
+  assert.deepEqual(messages, [direct, stream].map(({ src, type }) => ({
+    action: 'download-drag', url: src, type: 'video', mimeType: type
+  })));
 });
 
 test('a background-image drag ignores selected text, and disabling the setting cancels a gesture', async () => {
