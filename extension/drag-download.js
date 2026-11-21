@@ -114,7 +114,9 @@
 
   window.addEventListener('dragend', event => {
     if (!event.isTrusted || !gesture?.native) return;
-    if (event.clientX < 0 || event.clientX >= innerWidth || event.clientY < 0 || event.clientY >= innerHeight) {
+    const dropEffect = event.dataTransfer?.dropEffect ?? 'none';
+    if (dropEffect !== 'none' ||
+        event.clientX < 0 || event.clientX >= innerWidth || event.clientY < 0 || event.clientY >= innerHeight) {
       gesture = undefined;
       return;
     }

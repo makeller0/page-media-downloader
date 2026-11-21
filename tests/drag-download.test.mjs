@@ -59,6 +59,17 @@ test('a native drag downloads once after release, not when movement is sideways 
   assert.deepEqual(messages, [{ action: 'download-drag', url, type: 'image' }]);
 });
 
+test('a drop accepted by the page does not also start a download', async () => {
+  const { fire, messages } = await contentScript();
+  for (const dropEffect of ['copy', 'move', 'link', 'none']) {
+    fire('pointerdown');
+    fire('dragstart');
+    fire('pointercancel');
+    fire('dragend', { clientY: 120, dataTransfer: { dropEffect } });
+  }
+  assert.deepEqual(messages, [{ action: 'download-drag', url, type: 'image' }]);
+});
+
 test('video pointer drags work without intercepting clicks or seeks; synthetic events cannot download', async () => {
   const { fire, messages } = await contentScript();
   const composedPath = () => [clip];
