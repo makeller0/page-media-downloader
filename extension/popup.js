@@ -37,7 +37,9 @@ function updateSelection() {
 function makeCard(item) {
   const label = document.createElement('label');
   label.className = 'card';
-  const name = item.type === 'video' ? '视频' : '图片';
+  const name = item.category === 'animated' ? '动图'
+    : item.category === 'sticker' ? '表情包'
+    : item.type === 'video' ? '视频' : '图片';
   const preview = document.createElement('span');
   preview.className = 'preview';
   const placeholder = document.createElement('span');
@@ -71,7 +73,7 @@ function makeCard(item) {
 function render() {
   const min = Number(size.value);
   visible = items.filter(item =>
-    (type.value === 'all' || item.type === type.value)
+    (type.value === 'all' || item.type === type.value || (type.value === 'animated' && item.category))
     && Math.min(item.width, item.height) >= min
   );
   const cards = document.createDocumentFragment();
@@ -81,7 +83,7 @@ function render() {
   if (!scanning) {
     result.textContent = visible.length ? `找到 ${visible.length} 项可下载的内容`
       : items.length ? '没有符合筛选条件的内容。'
-      : '没找到可下载的图片或视频。可以先在网页上往下滚动，再重新扫描。';
+      : '没找到可下载的图片、视频或动图。可以先在网页上往下滚动，再重新扫描。';
   }
 }
 
@@ -92,7 +94,7 @@ async function scan() {
   selected.clear();
   notice.hidden = true;
   setFeedback('');
-  result.textContent = '正在查找网页里的图片和视频……';
+  result.textContent = '正在查找网页里的图片、视频和动图……';
   render();
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

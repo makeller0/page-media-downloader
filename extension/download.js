@@ -1,5 +1,17 @@
 export const videoUnavailable = '这个视频是流式视频，不能直接下载。';
 
+const imageExtensions = new Map([
+  ['apng', 'png'],
+  ['avif', 'avif'],
+  ['bmp', 'bmp'],
+  ['gif', 'gif'],
+  ['jpeg', 'jpg'],
+  ['png', 'png'],
+  ['svg+xml', 'svg'],
+  ['webp', 'webp'],
+  ['x-icon', 'ico']
+]);
+
 export function canDownload(raw, type) {
   try {
     const url = new URL(raw);
@@ -13,5 +25,9 @@ export function canDownload(raw, type) {
 
 export function downloadMedia(url, type) {
   if (!canDownload(url, type)) throw new Error('无法直接下载这个文件。');
-  return chrome.downloads.download({ url, conflictAction: 'uniquify' });
+  const options = { url, conflictAction: 'uniquify' };
+  const inlineFormat = url.match(/^data:image\/([^;,]+)/i)?.[1].toLowerCase();
+  const extension = imageExtensions.get(inlineFormat);
+  if (extension) options.filename = `网页图片.${extension}`;
+  return chrome.downloads.download(options);
 }
