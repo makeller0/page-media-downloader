@@ -17,12 +17,16 @@ async function contentScript() {
   let onStorage;
   let isCollapsed = true;
   class Element {}
-  const target = Object.assign(new Element(), { localName: 'div', baseURI: 'https://example.test/' });
+  const element = styles => Object.assign(new Element(), {
+    localName: 'div', baseURI: 'https://example.test/', styles
+  });
+  const target = element({ normal: { backgroundImage: 'url("sticker.gif")' } });
   vm.runInNewContext(source, {
     window: { addEventListener: (name, listener) => listeners.set(name, listener) },
     document: { getSelection: () => ({ isCollapsed }) },
     innerWidth: 800, innerHeight: 600, setTimeout: () => {},
-    Element, URL, getComputedStyle: () => ({ backgroundImage: 'url("sticker.gif")' }),
+    Element, URL, getComputedStyle: (node, pseudo) =>
+      node.styles[pseudo || 'normal'] || { backgroundImage: 'none', content: 'none' },
     chrome: {
       storage: {
         local: { get: async defaults => defaults },
@@ -41,7 +45,7 @@ async function contentScript() {
     });
   }
   return {
-    fire, messages, target,
+    fire, messages, target, element,
     selectText: () => { isCollapsed = false; },
     disable: () => onStorage({ dragToDownload: { newValue: false } }, 'local')
   };
@@ -103,4 +107,21 @@ test('a background-image drag ignores selected text, and disabling the setting c
   disable();
   fire('dragend', { clientY: 120 });
   assert.deepEqual(messages, [{ action: 'download-drag', url, type: 'image' }]);
+});
+
+test('drags find backgrounds on ancestors and visible pseudo-elements', async () => {
+  const { fire, messages, target, element } = await contentScript();
+  const child = element({ '::before': { content: 'none', backgroundImage: 'url("hidden.gif")' } });
+  for (const path of [
+    [child, target],
+    [child, element({ '::after': { content: '""', backgroundImage: 'url("after.gif")' } })],
+    [element({ '::before': { content: '""', backgroundImage: 'url("before.gif")' } }), target]
+  ]) {
+    fire('pointerdown', { composedPath: () => path });
+    fire('pointermove', { clientY: 120 });
+    fire('pointerup', { clientY: 120 });
+  }
+  assert.deepEqual(messages.map(message => message.url), [
+    url, 'https://example.test/after.gif', 'https://example.test/before.gif'
+  ]);
 });

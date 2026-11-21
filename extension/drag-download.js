@@ -29,14 +29,23 @@
       }
       return;
     }
-    const target = path[0];
-    if (!(target instanceof Element)) return;
-    const background = getComputedStyle(target).backgroundImage;
+    const elements = path.filter(node => node instanceof Element).slice(0, 5);
+    for (const target of elements) {
+      for (const pseudo of [null, '::after', '::before']) {
+        const style = getComputedStyle(target, pseudo);
+        if (pseudo && (!style.content || style.content === 'none' || style.content === 'normal')) continue;
+        const media = backgroundMedia(style.backgroundImage, target.baseURI);
+        if (media) return media;
+      }
+    }
+  }
+
+  function backgroundMedia(background, base) {
     const match = background.match(/url\((?:"([^"]*)"|'([^']*)'|([^)]*))\)/i);
     const url = match?.[1] ?? match?.[2] ?? match?.[3];
     if (!url) return;
     try {
-      return { url: new URL(url, target.baseURI).href, type: 'image', background: true };
+      return { url: new URL(url, base).href, type: 'image', background: true };
     } catch {
       return;
     }
