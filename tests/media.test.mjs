@@ -78,3 +78,39 @@ test('only submits downloadable media URLs, keeping existing downloads safe from
   assert.equal(await downloadMedia(url, 'video'), 123);
   assert.deepEqual(calls, [{ url, conflictAction: 'uniquify' }]);
 });
+
+test('the background submits the whole batch before any individual download finishes', async t => {
+  const pending = new Map();
+  let receiveMessage;
+  const originalChrome = globalThis.chrome;
+  globalThis.chrome = {
+    runtime: {
+      onInstalled: { addListener() {} },
+      onMessage: { addListener: listener => { receiveMessage = listener; } }
+    },
+    contextMenus: { onClicked: { addListener() {} } },
+    downloads: { download: ({ url }) => new Promise((resolve, reject) => pending.set(url, { resolve, reject })) }
+  };
+  t.after(() => { globalThis.chrome = originalChrome; });
+  await import('../extension/background.js');
+
+  const first = baseURI + 'image.png';
+  const second = baseURI + 'clip.mp4';
+  const third = baseURI + 'last.png';
+  let reply;
+  const response = new Promise(resolve => { reply = resolve; });
+  assert.equal(receiveMessage({ action: 'other' }, {}, reply), undefined);
+  assert.equal(receiveMessage({
+    action: 'download-batch',
+    items: [
+      { url: first, type: 'image' },
+      { url: second, type: 'video' },
+      { url: third, type: 'image' }
+    ]
+  }, {}, reply), true);
+  assert.deepEqual([...pending.keys()], [first, second, third]);
+  pending.get(first).resolve(1);
+  pending.get(second).reject(new Error('Download cancelled'));
+  pending.get(third).resolve(2);
+  assert.deepEqual(await response, { started: 2, failed: 1 });
+});

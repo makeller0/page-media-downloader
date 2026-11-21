@@ -1,4 +1,3 @@
-import { downloadMedia } from './download.js';
 import { scanPage } from './scan.js';
 
 const type = document.querySelector('#type');
@@ -129,22 +128,21 @@ selectAll.addEventListener('change', () => {
   updateSelection();
 });
 download.addEventListener('click', async () => {
-  const chosen = visible.filter(item => selected.has(item));
+  const chosen = visible.filter(item => selected.has(item)).map(({ url, type }) => ({ url, type }));
   downloading = true;
   updateSelection();
-  let started = 0;
-  for (const item of chosen) {
-    try {
-      await downloadMedia(item.url, item.type);
-      started++;
-    } catch {
-      continue;
-    }
+  setFeedback(`正在提交 ${chosen.length} 项下载。如果浏览器询问保存位置，请按提示保存。`);
+  try {
+    const { started, failed } = await chrome.runtime.sendMessage({ action: 'download-batch', items: chosen });
+    const summary = started ? `已开始下载 ${started} 项。${failed ? `另有 ${failed} 项未能开始。` : ''}`
+      : '没有文件开始下载。';
+    setFeedback(`${summary}在浏览器菜单里点“下载”可查看进度。`);
+  } catch {
+    setFeedback('无法确认下载是否开始。请先在浏览器菜单里点“下载”查看，再决定是否重试。');
+  } finally {
+    downloading = false;
+    updateSelection();
   }
-  const failed = chosen.length - started;
-  setFeedback(`已开始下载 ${started} 项。${failed ? `另有 ${failed} 项未能开始。` : ''}在浏览器菜单里点“下载”可查看进度。`);
-  downloading = false;
-  updateSelection();
 });
 
 scan();

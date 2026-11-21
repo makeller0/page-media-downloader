@@ -5,6 +5,17 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: 'video', title: '下载这个视频', contexts: ['video'] });
 });
 
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.action !== 'download-batch' || !Array.isArray(message.items)) return;
+
+  const requests = message.items.map(async ({ url, type }) => downloadMedia(url, type));
+  Promise.allSettled(requests).then(results => {
+    const started = results.filter(result => result.status === 'fulfilled').length;
+    sendResponse({ started, failed: results.length - started });
+  });
+  return true;
+});
+
 async function showError(tabId, title) {
   if (tabId === undefined) return;
   try {
